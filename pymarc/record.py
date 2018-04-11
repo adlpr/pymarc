@@ -6,7 +6,7 @@ from six import Iterator
 
 from pymarc.exceptions import BaseAddressInvalid, RecordLeaderInvalid, \
         BaseAddressNotFound, RecordDirectoryInvalid, NoFieldsFound, \
-        FieldNotFound
+        FieldNotFound, FixedFieldEditInvalid
 from pymarc.constants import LEADER_LEN, DIRECTORY_ENTRY_LEN, END_OF_RECORD
 from pymarc.field import Field, SUBFIELD_INDICATOR, END_OF_FIELD, \
         map_marc8_field, RawField
@@ -217,6 +217,33 @@ class Record(Iterator):
             return self.fields
 
         return [f for f in self.fields if f.tag in args]
+
+    def set_leader(self, start_byte, datastring):
+        """
+        Writes given data string onto LDR at given byte position.
+        """
+        end_byte = start_byte + len(datastring)
+        if not (isinstance(start_byte, int) and isinstance(datastring, str)):
+            raise TypeError("start byte must be int, datastring must be str")
+        if end_byte > LEADER_LEN:
+            raise FixedFieldEditInvalid
+        self.leader = self.leader[:start_byte] + datastring + self.leader[end_byte:]
+
+    def set_fixed_field(self, field_no, start_byte, datastring):
+        """
+        Writes given data string into fixed-length field at given byte position.
+        """
+        if field_no not in ['LDR','000','005','006','007','008']:
+            raise ValueError("invalid fixed field number")
+        if field_no in ['LDR','000']:
+            self.set_leader(start_byte, datastring)
+        else:
+            if not (isinstance(start_byte, int) and isinstance(datastring, str)):
+                raise TypeError("start byte must be int, datastring must be str")
+            end_byte = start_byte + len(datastring)
+            if end_byte > len(self[field_no].data):
+                raise FixedFieldEditInvalid
+            self[field_no].data = self[field_no].data[:start_byte] + datastring + self[field_no].data[end_byte:]
 
     def decode_marc(self, marc, to_unicode=True, force_utf8=False,
         hide_utf8_warnings=False, utf8_handling='strict'):

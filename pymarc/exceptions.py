@@ -38,3 +38,7 @@ class NoActiveFile(PymarcException):
 class FieldNotFound(PymarcException):
     def __str__(self):
         return "Record does not contain the specified field"
+
+class FixedFieldEditInvalid(PymarcException):
+    def __str__(self):
+        return "Illegal edit to fixed field"
