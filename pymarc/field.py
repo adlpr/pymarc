@@ -108,18 +108,21 @@ class Field(Iterator):
             field['a'] = 'value'
 
         Raises KeyError if there is more than one subfield code.
+
+        If code does not yet exist, adds new subfield.
         """
         subfields = self.get_subfields(code)
         if len(subfields) > 1:
             raise KeyError("more than one code '%s'" % code)
         elif len(subfields) == 0:
-            raise KeyError("no code '%s'" % code)
-        num_code = len(self.subfields)//2
-        while num_code >= 0:
-            if self.subfields[(num_code*2)-2] == code:
-                self.subfields[(num_code*2)-1] = value
-                break
-            num_code -= 1
+            self.add_subfield(code, value)
+        else:
+            num_code = len(self.subfields)//2
+            while num_code >= 0:
+                if self.subfields[(num_code*2)-2] == code:
+                    self.subfields[(num_code*2)-1] = value
+                    break
+                num_code -= 1
 
     def __next__(self):
         """
@@ -189,6 +192,13 @@ class Field(Iterator):
                 return None
         except ValueError:
             return None
+
+    def delete_all_subfields(self, code):
+        """
+        Repeats the delete_subfield method until all subfields of given code are deleted.
+        """
+        while self.delete_subfield(code):
+            continue
 
     def is_control_field(self):
         """

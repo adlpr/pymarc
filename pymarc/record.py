@@ -218,9 +218,76 @@ class Record(Iterator):
 
         return [f for f in self.fields if f.tag in args]
 
+    def remove_all_subfields(self, tags, codes):
+        """
+        Remove all subfields of given code(s) from all fields with given tag(s):
+
+            self.remove_fields('500', 'a')
+
+        will remove all subfields 'a' from all '500' fields;
+
+            self.remove_fields(['700','710'], 'e')
+
+        will remove all subfields 'a' from all '700' and '710' fields;
+
+            self.remove_fields(['700','710'], ['0','e'])
+
+        will remove all subfields '0' and 'e' from all '700' and '710' fields.
+
+        If any field is now empty as a result, also removes the field from the record.
+        """
+        if isinstance(tags, str):
+            tags = [tags]
+        if isinstance(codes, str):
+            codes = [codes]
+        for tag in tags:
+            for field in self.get_fields(tag):
+                for code in codes:
+                    field.delete_all_subfields(code)
+                    if not field.subfields:
+                        self.remove_field(field)
+
+    def sub(self, tags, codes, source_regex, target_regex):
+        """
+        Runs regex replacement on **ONLY FIRST** subfield of given code(s),
+        of all fields with given tag.
+        """
+        if isinstance(tags, str):
+            tags = [tags]
+        if isinstance(codes, str):
+            codes = [codes]
+        for tag in tags:
+            for field in self.get_fields(tag):
+                for code in codes:
+                    if field[code]:
+                        field[code] = re.sub(source_regex, target_regex, field[code])
+
+    def sub_before(self, tags, codes, source_regex, target_regex):
+        """
+        Runs regex replacement on ALL subfields BEFORE subfields of given code(s).
+        Use e.g. to correct intersubfield punctuation:
+
+            self.sub_before(['700','710'], 'e', r'[.,]*$', '.')
+        """
+        if isinstance(tags, str):
+            tags = [tags]
+        if isinstance(codes, str):
+            codes = [codes]
+        for tag in tags:
+            for field in self.get_fields(tag):
+                for code in codes:
+                    field.subfields = [re.sub(source_regex, target_regex, subf)   \
+                                        if (i%2 and i+1 < len(field.subfields) and field.subfields[i+1] == code)   \
+                                        else subf   \
+                                     for i,subf in enumerate(field.subfields)]
+
     def set_leader(self, start_byte, datastring):
         """
         Writes given data string onto LDR at given byte position.
+
+            # =LDR  04896nam a22003017i 4500
+            record.set_leader(6, 't')
+            # =LDR  04896ntm a22003017i 4500
         """
         end_byte = start_byte + len(datastring)
         if not (isinstance(start_byte, int) and isinstance(datastring, str)):
