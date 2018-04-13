@@ -619,11 +619,15 @@ class Record(Iterator):
         return None
 
     def pubyear(self):
-        for f in self.get_fields('260', '264'):
-            if self['260']:
-                return self['260']['c']
-            if self['264'] and f.indicator2 == '1':
-                return self['264']['c']
+        for f in self.get_fields('260'):
+            if 'c' in f:
+                return f['c']
+        for f in self.get_fields('264'):
+            if 'c' in f and f.indicator2 == '1':
+                return f['c']
+        for f in self.get_fields('362'):
+            if 'a' in f:
+                return f['a']   # sequential dates for serials
 
         return None
 
