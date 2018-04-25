@@ -46,7 +46,7 @@ class Field(Iterator):
             self.data = data
         else:
             self.indicator1, self.indicator2 = self.indicators = indicators
-            self.subfields = subfields
+            self.subfields = list(subfields)
 
     def __iter__(self):
         self.__pos = 0
@@ -199,6 +199,18 @@ class Field(Iterator):
         """
         while self.delete_subfield(code):
             continue
+
+    def sort(self, key=lambda code: code):
+        """
+        Sorts subfields according to input function (alphabetic by default).
+        """
+        self.subfields = [ \
+            item for tuple in \
+            sorted( \
+                zip(self.subfields[::2],self.subfields[1::2]), \
+                key=lambda sf: key(sf[0]) \
+            ) \
+            for item in tuple ]
 
     def is_control_field(self):
         """

@@ -222,15 +222,15 @@ class Record(Iterator):
         """
         Remove all subfields of given code(s) from all fields with given tag(s):
 
-            self.remove_fields('500', 'a')
+            self.remove_all_subfields('500', 'a')
 
         will remove all subfields 'a' from all '500' fields;
 
-            self.remove_fields(['700','710'], 'e')
+            self.remove_all_subfields(['700','710'], 'e')
 
         will remove all subfields 'a' from all '700' and '710' fields;
 
-            self.remove_fields(['700','710'], ['0','e'])
+            self.remove_all_subfields(['700','710'], ['0','e'])
 
         will remove all subfields '0' and 'e' from all '700' and '710' fields.
 
@@ -503,6 +503,15 @@ class Record(Iterator):
         http://dilettantes.code4lib.org/blog/2010/09/a-proposal-to-serialize-marc-in-json/
         """
         return json.dumps(self.as_dict(), **kwargs)
+
+    def main_entry(self):
+        """
+        Returns first 1xx field in record. Probably either 100, 110, 111 or 130,
+        but checks all of them anyway.
+        """
+        for f in self.get_fields(*[str(n) for n in [100, 110, 111, 130] + list(range(101,110)) + list(range(112,130)) + list(range(131,200))]):
+            return f
+        return None
 
     def title(self):
         """
