@@ -247,7 +247,7 @@ class Record(Iterator):
                     if not field.subfields:
                         self.remove_field(field)
 
-    def sub(self, tags, codes, source_regex, target_regex):
+    def sub(self, tags, codes, source_regex, target_regex, flags=0):
         """
         Runs regex replacement on **ONLY FIRST** subfield of given code(s),
         of all fields with given tag.
@@ -260,7 +260,23 @@ class Record(Iterator):
             for field in self.get_fields(tag):
                 for code in codes:
                     if field[code]:
-                        field[code] = re.sub(source_regex, target_regex, field[code])
+                        field[code] = re.sub(source_regex, target_regex, field[code], flags=flags)
+
+    def suball(self, tags, codes, source_regex, target_regex, flags=0):
+        """
+        Runs regex replacement on **ALL** subfields of given code(s),
+        of all fields with given tag.
+        """
+        if isinstance(tags, str):
+            tags = [tags]
+        if isinstance(codes, str):
+            codes = [codes]
+        for tag in tags:
+            for field in self.get_fields(tag):
+                for code in codes:
+                    for i in range(0,len(field.subfields),2):
+                        if field.subfields[i] in codes:
+                            field.subfields[i+1] = re.sub(source_regex, target_regex, field.subfields[i+1], flags=flags)
 
     def sub_before(self, tags, codes, source_regex, target_regex):
         """
