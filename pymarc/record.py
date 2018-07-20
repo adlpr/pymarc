@@ -218,6 +218,26 @@ class Record(Iterator):
 
         return [f for f in self.fields if f.tag in args]
 
+    def get_subfields(self, field_tags, subfield_codes, with_codes=False):
+        """
+        When passed a tag ('246') or list of tags ['245','246'],
+        and a subfield code ('a') or list of codes (['a','q']),
+        get_subfields() will return a list of contents of all
+        subfields with the given tag/code.
+
+            variant_titles = record.get_subfields('246','a')
+
+        If no fields with the specified
+        tag/code are found, an empty list is returned.
+        """
+        if isinstance(field_tags, str):
+            field_tags = [field_tags]
+        if isinstance(subfield_codes, str):
+            subfield_codes = [subfield_codes]
+        return [subfield for field in self.get_fields(*field_tags)  \
+                if any(subfield_code in field for subfield_code in subfield_codes) \
+                for subfield in field.get_subfields(*subfield_codes, with_codes=with_codes)]
+
     def remove_all_subfields(self, tags, codes):
         """
         Remove all subfields of given code(s) from all fields with given tag(s):

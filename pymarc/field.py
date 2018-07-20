@@ -149,10 +149,17 @@ class Field(Iterator):
             value_list.append(subfield[1].strip())
         return ' '.join(value_list)
 
-    def get_subfields(self, *codes):
+    def count(self, code):
+        """
+        Returns the number of subfields with given code.
+        """
+        return len([subf for subf in self if subf[0] == code])
+
+    def get_subfields(self, *codes, with_codes=False):
         """
         get_subfields() accepts one or more subfield codes and returns
-        a list of subfield values.  The order of the subfield values
+        a list of subfield values (or, if with_codes is True, a list of
+        tuples with subfield codes and values). The order of the subfield values
         in the list will be the order that they appear in the field.
 
             print field.get_subfields('a')
@@ -161,7 +168,7 @@ class Field(Iterator):
         values = []
         for subfield in self:
             if subfield[0] in codes:
-                values.append(subfield[1])
+                values.append(subfield if with_codes else subfield[1])
         return values
 
     def add_subfield(self, code, value):
