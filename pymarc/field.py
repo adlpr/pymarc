@@ -171,6 +171,19 @@ class Field(Iterator):
                 values.append(subfield if with_codes else subfield[1])
         return values
 
+    def subfields_as_dict(self):
+        """
+        Returns this field's subfields in the form:
+            { code : [val1, val2, ...], ... }
+        Loses order information, but useful for surveying.
+        """
+        subfields_dict = {}
+        for code, val in self:
+            if code not in subfields_dict:
+                subfields_dict[code] = []
+            subfields_dict[code].append(val)
+        return subfields_dict
+
     def add_subfield(self, code, value):
         """
         Adds a subfield code/value pair to the field.
@@ -180,25 +193,22 @@ class Field(Iterator):
         self.subfields.append(code)
         self.subfields.append(value)
 
-    def delete_subfield(self, code):
+    def delete_subfield(self, code, match_value=None):
         """
-        Deletes the first subfield with the specified 'code' and returns
-        its value:
+        Deletes the first subfield with the specified 'code' (and value if specified),
+        and returns its value:
 
             field.delete_subfield('a')
 
-        If no subfield is found with the specified code None is returned.
+        If no subfield is found with the specified code (and value if specified),
+        None is returned.
         """
-        try:
-            index = self.subfields.index(code)
-            if index % 2 == 0:
-                value = self.subfields.pop(index + 1)
-                self.subfields.pop(index)
-                return value
-            else:
-                return None
-        except ValueError:
-            return None
+        for i, subf_code in enumerate(self.subfields):
+            if i % 2 == 0 and code == subf_code:
+                if match_value is None or self.subfields[i+1] == match_value:
+                    self.subfields.pop(i)         # code
+                    return self.subfields.pop(i)  # value
+        return None
 
     def delete_all_subfields(self, code):
         """
@@ -211,13 +221,10 @@ class Field(Iterator):
         """
         Sorts subfields according to input function (alphabetic by default).
         """
-        self.subfields = [ \
-            item for tuple in \
-            sorted( \
-                zip(self.subfields[::2],self.subfields[1::2]), \
-                key=lambda sf: key(sf[0]) \
-            ) \
-            for item in tuple ]
+        self.subfields = [ item for tuple in \
+                          sorted( zip(self.subfields[::2],self.subfields[1::2]), \
+                                  key=key ) \
+                          for item in tuple ]
 
     def is_control_field(self):
         """
