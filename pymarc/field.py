@@ -42,7 +42,7 @@ class Field(Iterator):
             self.tag = '%03s' % tag
 
         # assume controlfields are numeric only; replicates ruby-marc behavior
-        if self.tag < '010' and self.tag.isdigit():
+        if self.is_control_field():
             self.data = data
         else:
             self.indicator1, self.indicator2 = self.indicators = indicators
@@ -137,6 +137,16 @@ class Field(Iterator):
             return subfield
         raise StopIteration
 
+    def __eq__(self, other):
+        """
+        Fields are equivalent if they contain all the same data as another Field.
+        """
+        if not isinstance(other, Field) or other.tag != self.tag:
+            return False
+        if self.is_control_field():
+            return other.data == self.data
+        return other.indicators == self.indicators and other.subfields == self.subfields
+
     def value(self):
         """
         Returns the field as a string without tag, indicators, and
@@ -162,12 +172,14 @@ class Field(Iterator):
         tuples with subfield codes and values). The order of the subfield values
         in the list will be the order that they appear in the field.
 
-            print field.get_subfields('a')
-            print field.get_subfields('a', 'b', 'z')
+        If no code is specified, all subfields are returned.
+
+            field.get_subfields('a')
+            field.get_subfields('a', 'b', 'z')
         """
         values = []
         for subfield in self:
-            if subfield[0] in codes:
+            if subfield[0] in codes or not codes:
                 values.append(subfield if with_codes else subfield[1])
         return values
 
@@ -231,9 +243,7 @@ class Field(Iterator):
         Returns true or false if the field is considered a control field.
         Control fields lack indicators and subfields.
         """
-        if self.tag < '010' and self.tag.isdigit():
-            return True
-        return False
+        return self.tag < '010' and self.tag.isdigit()
 
     def as_marc(self, encoding):
         """

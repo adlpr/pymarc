@@ -197,7 +197,22 @@ class Record(Iterator):
         """
         self.fields[:] = (field for field in self.fields if field.tag not in tags)
 
-    def get_fields(self, *args):
+    def dedupe_fields(self):
+        """
+        If this record contains more than one field with exactly the same data,
+        remove all instances after the first.
+        Returns list of removed fields.
+        """
+        deduped_fields = []
+        for i, first_field in enumerate(self.fields):
+            k = 0
+            for j, following_field in enumerate(self.fields[i+1:]):
+                if first_field == following_field:
+                    deduped_fields.append(self.fields.pop(i+1+j-k))
+                    k += 1
+        return deduped_fields
+
+    def get_fields(self, *tags):
         """
         When passed a tag ('245'), get_fields() will return a list of all the
         fields in a record with a given tag.
@@ -213,14 +228,13 @@ class Record(Iterator):
         If no tag is passed in to get_fields() a list of all the fields will be
         returned.
         """
-        if (len(args) == 0):
+        if not tags:
             return self.fields
-
-        return [f for f in self.fields if f.tag in args]
+        return [f for f in self.fields if f.tag in tags]
 
     def get_subfields(self, field_tags, subfield_codes, with_codes=False):
         """
-        When passed a tag ('246') or list of tags ['245','246'],
+        When passed a tag ('246') or list of tags (['245','246']),
         and a subfield code ('a') or list of codes (['a','q']),
         get_subfields() will return a list of contents of all
         subfields with the given tag/code.
@@ -551,7 +565,7 @@ class Record(Iterator):
 
     def title(self):
         """
-        Returns the title of the record (245 $a an $b).
+        Returns the title of the record (245 $a and $b).
         """
         try:
             title = self['245']['a']
