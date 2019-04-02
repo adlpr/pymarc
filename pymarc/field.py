@@ -229,6 +229,12 @@ class Field(Iterator):
         while self.delete_subfield(code):
             continue
 
+    def change_code(self, from_code, to_code):
+        """
+        Converts all subfield tags of a given code to another code.
+        """
+        self.subfields = [val if i%2 else {from_code:to_code}.get(val, val) for i, val in enumerate(self.subfields)]
+
     def sort(self, key=lambda code: code):
         """
         Sorts subfields according to input function (alphabetic by default).
