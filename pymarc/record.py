@@ -91,21 +91,19 @@ class Record(Iterator):
     def __getitem__(self, tag):
         """
         Allows a shorthand lookup by tag:
-
             record['245']
-
         """
+        if tag in ('000','LDR'):  # a couple aliases for the leader
+            return self.leader
         fields = self.get_fields(tag)
-        if len(fields) > 0:
+        if fields:
             return fields[0]
         return None
 
     def __contains__(self, tag):
         """
         Allows a shorthand test of tag membership:
-
             '245' in record
-
         """
         fields = self.get_fields(tag)
         return len(fields) > 0
@@ -654,8 +652,7 @@ class Record(Iterator):
         return aelist
 
     def location(self):
-        loc = self.get_fields('852')
-        return loc
+        return self.get_fields('852')
 
     def notes(self):
         """
@@ -673,7 +670,7 @@ class Record(Iterator):
 
     def physicaldescription(self):
         """
-        Return all 300 fields in an array
+        Return all 300 fields as a list.
         """
         return self.get_fields('300')
 
