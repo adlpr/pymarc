@@ -1,4 +1,4 @@
-version = '3.1.11'
+version = '3.1.L'
 
 from setuptools import setup
 
@@ -20,7 +20,7 @@ Programming Language :: Python :: 3.7
 Topic :: Text Processing :: General
 """
 
-with open("README.md") as f:
+with open('README.md') as f:
     long_description = f.read()
 
 setup(
