@@ -678,12 +678,12 @@ class Record(Iterator):
         """
         Note: 264 field with second indicator '1' indicates publisher.
         """
-        for f in self.get_fields('260', '264'):
-            if self['260']:
-                return self['260']['b']
-            if self['264'] and f.indicator2 == '1':
-                return self['264']['b']
-
+        for f in self.get_fields('260'):
+            if 'b' in f:
+                return f['b']
+        for f in self.get_fields('264'):
+            if 'b' in f and f.indicator2 == '1':
+                return f['b']
         return None
 
     def pubyear(self):
